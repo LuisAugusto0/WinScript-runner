@@ -4,6 +4,7 @@ call :SetColors
 
 :: Set variables
 set "StartDir=c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer"
+set "ScriptDir=%StartDir%\scripts"
 set "NamesFile=%StartDir%\scripts.txt"
 set "ExecFile="
 
@@ -15,7 +16,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :: Check Administrator Privileges
-net.exe session >nul 2>&1
+net session >nul 2>&1
 if %ERRORLEVEL% equ 0 (
 	:: Running a new tab in Admin and closing actual flow
 	echo %RED% Enable Administrator to this tool work as intended 
@@ -36,6 +37,7 @@ setlocal EnableDelayedExpansion
 set "script="
 set /a i=0
 :: Ler o arquivo linha por linha
+echo %NamesFile%
 for /f "tokens=*" %%a in (%NamesFile%) do (
     set "script[!i!]=%%a"
 	set /a i+=1
@@ -52,8 +54,8 @@ set /p escolha="Option: "
 
 REM Executar o script escolhido, se válido
 if /i "%escolha%" LEQ "%i%" (
-	set ExecFile = !StartDir!\!script[%escolha%]!
-	call :RunScript set x=!ExecFile!
+	set ExecFile=%ScriptDir%\!script[%escolha%]!
+	call :RunScript !ExecFile!
 ) else ( 
 	echo Opcao invalida 
 )
@@ -62,22 +64,12 @@ if /i "%escolha%" LEQ "%i%" (
 pause
 exit
 
-
-
-
-
-
-
 ::-----------Functions------------::
 
 :RunScript
-echo Running script %x%
-if not exist "%~2" (
-    echo Script file not found.
-    exit /b 1
-)
+echo Running script %1
 :: Read and execute each line of the script
-for /f "tokens=*" %%a in (%~2) do (
+for /f "tokens=*" %%a in (%1) do (
     echo %%a
     if !ERRORLEVEL! neq 0 (
         exit /b 1

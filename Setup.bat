@@ -48,7 +48,7 @@ if %ERRORLEVEL% NEQ 0 (
     copy ".\scripts" "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
 
-    dir /B "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts\*.cmd" > "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts"
+    dir /B "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts\*.bat" > "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts.txt"
 
     if !bugs! EQU 0 (
         echo Folder created with success
