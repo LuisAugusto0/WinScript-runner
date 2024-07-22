@@ -2,7 +2,12 @@
 :: Enable color support and setting colors
 call :SetColors
 
-cd "c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer" >nul 2>&1
+:: Set variables
+set "StartDir=c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer"
+set "NamesFile=%StartDir%\scripts.txt"
+set "ExecFile="
+
+cd %StartDir% >nul 2>&1
 if %ERRORLEVEL% neq 0 (
 	echo Error on acess the scripts on AppData, run the Setup to fix this.
 	pause
@@ -23,69 +28,39 @@ if %ERRORLEVEL% equ 0 (
 )
 
 :MenuSetup
+
+:MainMenu
 setlocal EnableDelayedExpansion
 :: Definir o nome do arquivo de texto
-set "arquivo=c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts.txt"
-
-REM Variável para armazenar os scripts
-set "scripts="
-
-REM Ler o arquivo linha por linha
-for /f "tokens=*" %%a in (%arquivo%) do (
-    set "scripts=!scripts!%%a|"
-)
-
-REM Converter para um array separado por '|'
-set "scripts=!scripts:~0,-1!"
-
-REM Definir o delimitador para '|' (pipe)
-set "delimitador=|"
-
-REM Converter para um array usando o delimitador
-set i=0
-for %%a in (!scripts!) do (
+:: Variável para armazenar os scripts
+set "script="
+set /a i=0
+:: Ler o arquivo linha por linha
+for /f "tokens=*" %%a in (%NamesFile%) do (
     set "script[!i!]=%%a"
-    set /a i+=1
+	set /a i+=1
 )
+set /a i-=1
 
-REM Exibir opções para o usuário
+:: Exibir opções para o usuário
 echo Escolha um script para abrir:
-echo [0] !script[0]!
-echo [1] !script[1]!
+for /L %%a in (0,1,!i!) do call echo %%a - %%script[%%a]%%
+
 
 REM Ler a escolha do usuário
-set /p escolha="Digite o número da opção desejada: "
+set /p escolha="Option: "
 
 REM Executar o script escolhido, se válido
-if "%escolha%" equ "0" (
-     !script[0]!
-) else if "%escolha%" equ "1" (
-    call !script[1]!
-) else (
-    echo Opção inválida.
+if /i "%escolha%" LEQ "%i%" (
+	set ExecFile = !StartDir!\!script[%escolha%]!
+	call :RunScript set x=!ExecFile!
+) else ( 
+	echo Opcao invalida 
 )
 
-pause
-:MainMenu
-
-echo. 1 - teste
-echo.
-
-set /p input=Put your input here: 
-echo %input%
-if /i %input% equ 1 goto rON
-if /i %input% equ 2 goto res
-::ELSE
-echo Invalid Input 
-
-:rON
-
-:res
 
 pause
-
-
-
+exit
 
 
 
@@ -94,6 +69,21 @@ pause
 
 
 ::-----------Functions------------::
+
+:RunScript
+echo Running script %x%
+if not exist "%~2" (
+    echo Script file not found.
+    exit /b 1
+)
+:: Read and execute each line of the script
+for /f "tokens=*" %%a in (%~2) do (
+    echo %%a
+    if !ERRORLEVEL! neq 0 (
+        exit /b 1
+    )
+)
+exit /b 0
 
 :: Color support
 :SetColors
@@ -114,4 +104,4 @@ set BRIGHT_BLUE=%ESC%[94m
 set BRIGHT_MAGENTA=%ESC%[95m
 set BRIGHT_CYAN=%ESC%[96m
 set BRIGHT_WHITE=%ESC%[97m
-exit /b
+exit /b 0
