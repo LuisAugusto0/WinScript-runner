@@ -32,11 +32,10 @@ if %ERRORLEVEL% equ 0 (
 
 :MainMenu
 setlocal EnableDelayedExpansion
-:: Definir o nome do arquivo de texto
-:: Variável para armazenar os scripts
+:: Array to store the scritps names 
 set "script="
 set /a i=0
-:: Ler o arquivo linha por linha
+:: Read archive lines
 echo %NamesFile%
 for /f "tokens=*" %%a in (%NamesFile%) do (
     set "script[!i!]=%%a"
@@ -44,20 +43,18 @@ for /f "tokens=*" %%a in (%NamesFile%) do (
 )
 set /a i-=1
 
-:: Exibir opções para o usuário
-echo Escolha um script para abrir:
+:: Show option to the user
+echo Choose a script to open
 for /L %%a in (0,1,!i!) do call echo %%a - %%script[%%a]%%
 
 
-REM Ler a escolha do usuário
+:: Read option and execute script if is valid
 set /p escolha="Option: "
-
-REM Executar o script escolhido, se válido
 if /i "%escolha%" LEQ "%i%" (
 	set ExecFile=%ScriptDir%\!script[%escolha%]!
 	call :RunScript !ExecFile!
 ) else ( 
-	echo Opcao invalida 
+	echo Invalid option
 )
 
 
@@ -70,7 +67,7 @@ exit
 echo Running script %1
 :: Read and execute each line of the script
 for /f "tokens=*" %%a in (%1) do (
-    echo %%a
+    %%a
     if !ERRORLEVEL! neq 0 (
         exit /b 1
     )
