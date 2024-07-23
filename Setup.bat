@@ -74,8 +74,6 @@ if %ERRORLEVEL% NEQ 0 (
     xcopy /s ".\menus" "%MenusDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "Copy of menus made" "copy of the menus"
-    copy "./WinScript.bat" "%MenusDir%" >nul 2>&1
-    set /A bugs+=!ERRORLEVEL!
     dir /b "%MenusDir%" > "%MenusFile%"
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "'%MenusFile%' created" "creation of '%MenusFile%'"
@@ -83,8 +81,8 @@ if %ERRORLEVEL% NEQ 0 (
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "'%ModulesFile%' created" "creation of '%ModulesFile%'"
     echo %MyPath% > "%PathFile%"
-    call :CommandMensage !ERRORLEVEL! "'%PathFile%' created" "creation of '%PathFile%'"
     set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "'%PathFile%' created" "creation of '%PathFile%'"
     for /f "tokens=*" %%a in (%ModulesFile%) do (
         dir /b "%ScriptsDir%\%%a" > "%StartDir%\%%a%ScriptsNamesSufix%"
         set /A bugs+=!ERRORLEVEL!
@@ -121,14 +119,14 @@ if %ERRORLEVEL% NEQ 0 (
 
 :removingAndCreating
     rmdir /s /q "%StartDir%" >nul 2>&1
-    @REM if %ERRORLEVEL% EQU 0 (
-    @REM     echo %GREEN% Folder deleted with success
-    @REM ) else if %ERRORLEVEL% EQU 2 (
-    @REM     echo %GREEN% Folder deleted with success
-    @REM ) else (
-    @REM     echo %RED% An error occurred during the deletion
-    @REM )
-    call :CommandMensage !ERRORLEVEL! "'%StartDir%' and subdir deleted" "deletion of '%StartDir%'"
+    if %ERRORLEVEL% EQU 0 (
+        echo %GREEN% Folder deleted with success
+    ) else if %ERRORLEVEL% EQU 2 (
+        echo %GREEN% Folder deleted with success
+    ) else (
+        echo %RED% An error occurred during the deletion
+    )
+    @REM call :CommandMensage !ERRORLEVEL! "'%StartDir%' and subdir deleted" "deletion of '%StartDir%'"
     goto creating
 
 :CommandMensage
