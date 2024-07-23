@@ -1,7 +1,16 @@
 @echo off
 
+:: Set variables
+set "AuxArqSufix=.txt"
+set "StartDir=c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer"
+set "ScriptsDir=%StartDir%\scripts"
+set "DataDir=%StartDir%\data"
+set "ModulesFile=%StartDir%\modules%AuxArqSufix%"
+set "ScriptsNamesSufix=_names%AuxArqSufix%"
+
+
 ::Check if folder exists
-cd "c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer" >nul 2>&1
+cd "%StartDir%" >nul 2>&1
 set AUX=%ERRORLEVEL%
 :: Check Administrator Privileges
 net session >nul 2>&1
@@ -41,19 +50,27 @@ if %ERRORLEVEL% NEQ 0 (
 :creating
     setlocal enabledelayedexpansion
     set /A bugs=0
-    mkdir "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer" >nul 2>&1
+    mkdir "%StartDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
-    mkdir "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts" >nul 2>&1
+    mkdir "%ScriptsDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
-    copy ".\scripts" "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts" >nul 2>&1
+    xcopy /s ".\scripts" "%ScriptsDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
+    mkdir "%DataDir%" >nul 2>&1
 
-    dir /B "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts\*.bat" > "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts.txt"
+
+    dir /b "%ScriptsDir%" > "%ModulesFile%"
+
+    for /f "tokens=*" %%a in (%ModulesFile%) do (
+        dir /b "%ScriptsDir%\%%a" > "%StartDir%\%%a%ScriptsNamesSufix%"
+    )
+
+    @REM dir /B "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts\*.bat" > "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts.txt"
 
     if !bugs! EQU 0 (
         echo Folder created with success
     ) else (
-        echo An error occurred during creation of the folder
+        echo !bugs! errors during creation of the folder
         goto end
     )
     endlocal
@@ -61,7 +78,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 
 :removing
-    rmdir /s /q "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer" >nul 2>&1
+    rmdir /s /q "%StartDir%" >nul 2>&1
     echo %ERRORLEVEL%
     if %ERRORLEVEL% EQU 0 (
         echo Folder deleted with success
@@ -73,7 +90,7 @@ if %ERRORLEVEL% NEQ 0 (
     goto end
 
 :removingAndCreating
-    rmdir /s /q "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer" >nul 2>&1
+    rmdir /s /q "%StartDir%" >nul 2>&1
     goto creating
 
     
