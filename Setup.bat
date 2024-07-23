@@ -1,21 +1,22 @@
 @echo off
 
 :: Set variables
-set "AuxArqSufix=.txt"
-set "StartDir=c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer"
-set "ScriptsDir=%StartDir%\scripts"
-set "DataDir=%StartDir%\data"
-set "ModulesFile=%StartDir%\modules%AuxArqSufix%"
-set "ScriptsNamesSufix=_names%AuxArqSufix%"
+call :SetVariables
+call :SetColors
 
+:: Set console properties
+chcp 65001 >nul 2>&1
+mode con lines=100 cols=140
+title WindowScript Setup
 
 ::Check if folder exists
 cd "%StartDir%" >nul 2>&1
 set AUX=%ERRORLEVEL%
+
 :: Check Administrator Privileges
 net session >nul 2>&1
-
 if %ERRORLEVEL% NEQ 0 (
+    call :SplashAscii
     if %AUX% neq 0 goto FileNotExistsMenu 
     ::ELSE
     goto FileExistsMenu 
@@ -24,27 +25,35 @@ if %ERRORLEVEL% NEQ 0 (
 ) else echo Run without admin rights && goto end
 
 
+:: Methods
+
 :FileNotExistsMenu
-    echo Error accessing the scripts in AppData. Do you want to create a new folder?
-    echo [1] - Create folder
-    echo [2] - Exit
-    set /p input=Option: 
+    cls
+    call :SetupAscii
+    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    echo %BLUE%║%WHITE% Error accessing the scripts in AppData. Do you want to create a new folder?				%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %GREEN%Create folder											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %RED%Exit												%BLUE%║
+    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+    set /p input=%WHITE%- Option: 
     if /i "%input%" equ "1" goto creating
     goto end
 
 :FileExistsMenu
-    echo Scripts folder already exists. What do you want to do?
-    echo [1] - Remove folder
-    echo [2] - Update folder
-    echo [3] - Run program
-    echo [4] - Exit
-    set /p input=Option: 
+    cls
+    call :SetupAscii
+    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    echo %BLUE%║%WHITE% What do you want to do?										%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %WHITE%Remove folder											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %WHITE%Update folder											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%3%YELLOW%] - %WHITE%Run program											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%4%YELLOW%] - %WHITE%Exit												%BLUE%║
+    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+    set /p input=%WHITE%- Option: 
     if /i "%input%" equ "1" goto removing
     if /i "%input%" equ "2" goto removingAndCreating
     if /i "%input%" equ "3" goto run
     goto end
-
-
 
 
 :creating
@@ -52,60 +61,164 @@ if %ERRORLEVEL% NEQ 0 (
     set /A bugs=0
     mkdir "%StartDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "'%StartDir%' created" "creation of '%StartDir%'"
     mkdir "%ScriptsDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "'%ScriptsDir%' created" "creation of '%ScriptsDir%'"
     xcopy /s ".\scripts" "%ScriptsDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
-    mkdir "%DataDir%" >nul 2>&1
-
-
+    call :CommandMensage !ERRORLEVEL! "Copy of scripts made" "copy of the scripts"
+    mkdir "%MenusDir%" >nul 2>&1
+    set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "'%MenusDir%' created" "creation of '%MenusDir%'"
+    xcopy /s ".\menus" "%MenusDir%" >nul 2>&1
+    set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "Copy of menus made" "copy of the menus"
+    copy "./WinScript.bat" "%MenusDir%" >nul 2>&1
+    set /A bugs+=!ERRORLEVEL!
+    dir /b "%MenusDir%" > "%MenusFile%"
+    set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "'%MenusFile%' created" "creation of '%MenusFile%'"
     dir /b "%ScriptsDir%" > "%ModulesFile%"
-
+    set /A bugs+=!ERRORLEVEL!
+    call :CommandMensage !ERRORLEVEL! "'%ModulesFile%' created" "creation of '%ModulesFile%'"
+    echo %MyPath% > "%PathFile%"
+    call :CommandMensage !ERRORLEVEL! "'%PathFile%' created" "creation of '%PathFile%'"
+    set /A bugs+=!ERRORLEVEL!
     for /f "tokens=*" %%a in (%ModulesFile%) do (
         dir /b "%ScriptsDir%\%%a" > "%StartDir%\%%a%ScriptsNamesSufix%"
+        set /A bugs+=!ERRORLEVEL!
+        call :CommandMensage !ERRORLEVEL! "'%StartDir%\%%a%ScriptsNamesSufix%' created" "creation of '%StartDir%\%%a%ScriptsNamesSufix%'"
     )
 
     @REM dir /B "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts\*.bat" > "C:\Users\%USERNAME%\AppData\Local\WindowsOptmizer\scripts.txt"
 
     if !bugs! EQU 0 (
-        echo Folder created with success
+        echo %GREEN% Folder created with success
     ) else (
-        echo !bugs! errors during creation of the folder
+        echo %RED% !bugs! errors during creation of the folder
         goto end
     )
     endlocal
-    goto runMenu
+    pause>nul|set/p =%WHITE%Press any key to continue...
+    goto FileExistsMenu
 
 
 :removing
     rmdir /s /q "%StartDir%" >nul 2>&1
-    echo %ERRORLEVEL%
     if %ERRORLEVEL% EQU 0 (
-        echo Folder deleted with success
+        echo %GREEN% Folder deleted with success
+        pause>nul|set/p =%WHITE%Press any key to continue...
     ) else if %ERRORLEVEL% EQU 2 (
-        echo Folder deleted with success
+        echo %GREEN% Folder deleted with success
+        pause>nul|set/p =%WHITE%Press any key to continue...
     ) else (
-        echo An error occurred during the deletion
+        echo %RED% An error occurred during the deletion
+        goto end
     )
-    goto end
+    goto FileNotExistsMenu
+    
 
 :removingAndCreating
     rmdir /s /q "%StartDir%" >nul 2>&1
+    @REM if %ERRORLEVEL% EQU 0 (
+    @REM     echo %GREEN% Folder deleted with success
+    @REM ) else if %ERRORLEVEL% EQU 2 (
+    @REM     echo %GREEN% Folder deleted with success
+    @REM ) else (
+    @REM     echo %RED% An error occurred during the deletion
+    @REM )
+    call :CommandMensage !ERRORLEVEL! "'%StartDir%' and subdir deleted" "deletion of '%StartDir%'"
     goto creating
 
-    
-
-:runMenu
-    echo Do you want to run the program now?
-    echo [1] - yes
-    echo [2] - no
-    set /p input=Option: 
-    if /i %input% neq 1 goto end
-
+:CommandMensage
+    if %1 equ 0 (
+        echo %GREEN%%~2 with success
+    ) else (
+        echo %RED%An error occurred during the %~3
+    )
+    exit /b 0
 :run
 	powershell -Command "Start-Process ./Comandos.bat -Verb RunAs"
     exit
+
 :end
-    echo Type any key to close program...
-    pause >nul 2>&1
+    pause>nul|set/p =%WHITE%Press any key to close program...
     exit
+
+:: Style functions
+
+:SplashAscii
+echo %BLUE%
+@REM for /f "tokens=*" %%a in (%CommonDir%\splashFull.txt) do ( echo %%a )
+echo ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+echo ║													║
+echo ║													║  
+echo ║		██╗    ██╗██╗███╗   ██╗███████╗ ██████╗██████╗ ██╗██████╗ ████████╗			║
+echo ║		██║    ██║██║████╗  ██║██╔════╝██╔════╝██╔══██╗██║██╔══██╗╚══██╔══╝			║
+echo ║		██║ █╗ ██║██║██╔██╗ ██║███████╗██║     ██████╔╝██║██████╔╝   ██║  			║ 
+echo ║		██║███╗██║██║██║╚██╗██║╚════██║██║     ██╔══██╗██║██╔═══╝    ██║ 			║  
+echo ║		╚███╔███╔╝██║██║ ╚████║███████║╚██████╗██║  ██║██║██║        ██║ 			║  
+echo ║		 ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝  			║ 
+echo ║													║
+echo ║			██████╗ ██╗   ██╗███╗   ██╗███╗   ██╗███████╗██████╗  				║
+echo ║			██╔══██╗██║   ██║████╗  ██║████╗  ██║██╔════╝██╔══██╗				║
+echo ║			██████╔╝██║   ██║██╔██╗ ██║██╔██╗ ██║█████╗  ██████╔╝				║
+echo ║			██╔══██╗██║   ██║██║╚██╗██║██║╚██╗██║██╔══╝  ██╔══██╗				║
+echo ║			██║  ██║╚██████╔╝██║ ╚████║██║ ╚████║███████╗██║  ██║				║
+echo ║			╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝				║
+echo ║													║
+echo ║ %CYAN%Made by LuisAugusto0 (GitHub)%BLUE%										║
+echo ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝                       
+pause>nul|set/p =%CYAN%Press any key to start the Setup...
+exit /b 0
+
+:SetupAscii
+echo %BLUE%
+for /f "tokens=*" %%a in (%CommonDir%\setup.txt) do ( echo %%a )
+echo %WHITE%
+exit /b 0
+
+
+::SET
+
+:: Color support
+:SetColors
+for /f "tokens=*" %%a in ('echo prompt $E^|cmd') do set "ESC=%%a"
+set BLACK=%ESC%[30m
+set RED=%ESC%[31m
+set GREEN=%ESC%[32m
+set YELLOW=%ESC%[33m
+set BLUE=%ESC%[34m
+set MAGENTA=%ESC%[35m
+set CYAN=%ESC%[36m
+set WHITE=%ESC%[37m
+set BRIGHT_BLACK=%ESC%[90m
+set BRIGHT_RED=%ESC%[91m
+set BRIGHT_GREEN=%ESC%[92m
+set BRIGHT_YELLOW=%ESC%[93m
+set BRIGHT_BLUE=%ESC%[94m
+set BRIGHT_MAGENTA=%ESC%[95m
+set BRIGHT_CYAN=%ESC%[96m
+set BRIGHT_WHITE=%ESC%[97m
+exit /b 0
+
+:: Common variables
+:SetVariables
+set "AuxArqSufix=.txt"
+set "StartDir=c:\Users\%USERNAME%\AppData\Local\WinscriptRunner"
+set "ScriptsDir=%StartDir%\scripts"
+set "MenusDir=%StartDir%\menus"
+set "ModulesFile=%StartDir%\modules%AuxArqSufix%"
+set "MenusFile=%StartDir%\menus%AuxArqSufix%"
+set "PathFile=%StartDir%\initialPath%AuxArqSufix%"
+set "ScriptsNamesSufix=_names%AuxArqSufix%"
+set "MyPath=%cd%"
+set "CommonDir=%MyPath%\commonFiles"
+
+:: Creating a Newline variable (the two blank lines are required!)
+set NLM=^
+
+
+set NL=^^^%NLM%%NLM%^%NLM%%NLM%
+exit /b 0

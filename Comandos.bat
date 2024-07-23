@@ -4,7 +4,7 @@ call :SetColors
 
 :: Set variables
 set "AuxArqSufix=.txt"
-set "StartDir=c:\Users\%USERNAME%\AppData\Local\WindowsOptmizer"
+set "StartDir=c:\Users\%USERNAME%\AppData\Local\WinscriptRunner"
 set "ScriptDir=%StartDir%\scripts"
 set "ModulesFile=%StartDir%\modules%AuxArqSufix%"
 @REM set "DataDir=%StartDir%\data"
