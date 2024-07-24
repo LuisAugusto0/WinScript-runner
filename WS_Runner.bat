@@ -5,9 +5,10 @@ call :SetVariables
 call :SetColors
 
 ::-----------------------------Startup-Verifications-----------------------------::
-:: - Verify if the files exists and the administratos privileges to define which ::
+:: - Verify if the files exists and the administrator privileges to define which ::
 ::      menu will show to the user                                               ::
 ::-------------------------------------------------------------------------------::
+:Verifications
 SETLOCAL EnableDelayedExpansion
 :: Check Administrator Privileges
 net session >nul 2>&1
@@ -15,9 +16,11 @@ set AdminTest=%ERRORLEVEL%
 
 ::Check if files exists
 cd "%StartDir%" >nul 2>&1
-set FolderTest=%ERRORLEVEL%     
+set FolderTest=%ERRORLEVEL%   
 
-set FilesTest=0
+cd "%AsciiDir%" >nul 2>&1
+set FilesTest=%ERRORLEVEL%  
+
 if not exist %ModulesFile% (
     set FilesTest+=1
 ) else (
@@ -27,22 +30,6 @@ if not exist %ModulesFile% (
 )
 
 if not exist %MenusFile% set FilesTest+=1
-
-@REM if not exist %PathFile% (
-@REM     call :SplashAscii
-@REM     set FilesTest+=1
-@REM ) else (
-@REM     call :SplashAsciiNoStop
-@REM     set /a i=0
-@REM     :: Read archive lines
-@REM     for /f "tokens=*" %%a in (%PathFile%) do (
-@REM         set "OldPath[!i!]=%%a"
-@REM         set /a i+=1
-@REM     )
-@REM     set /a i-=1
-@REM )
-
-
 
 
 if %FolderTest% neq 0 (
@@ -73,11 +60,13 @@ if %FolderTest% neq 0 (
 :AdminChoice
     cls
     call :SplashAsciiNoStop
-    echo Do you want to enter the setup menu?
-    echo %YELLOW%[%WHITE%1%YELLOW%] - %GREEN%yes	%YELLOW%[%WHITE%2%YELLOW%] - %RED%no
+    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    echo %BLUE%║%WHITE% Do you want to enter the setup menu?	    	        		    				%BLUE%║
+    echo %BLUE%║%YELLOW%[%WHITE%0%YELLOW%] - %WHITE%No	%YELLOW% [%WHITE%1%YELLOW%] - %WHITE%Yes 										%BLUE%║
+    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
     set /p input=%WHITE%- Option: 
+    if /i "%input%" equ "0" goto OpenAdmin
     if /i "%input%" equ "1" goto ModifySetup 
-    if /i "%input%" equ "2" goto OpenAdmin
     ::else
     call :inputMissmatch %input%
     goto AdminChoice
@@ -87,18 +76,27 @@ if %FolderTest% neq 0 (
     @REM timeout 2 > nul
     powershell -Command "Start-Process %cd%\WS_Runner.bat -Verb RunAs"
 	exit /b 0
+::-------------------------------------------------------------------------------::
 ::--------------------------------END-Startup------------------------------------::
+::-------------------------------------------------------------------------------::
+
+::---------------------------------Main-Menu-------------------------------------::
+:: - Redirect to all the modules and scripts                                     ::
+:: - Run the scripts                                                             ::
+::-------------------------------------------------------------------------------::
 
 :MainMenu
-    cls 
-    :MainMenuAscii
-
     setlocal EnableDelayedExpansion
+    cls 
+    call :MainMenuAscii
+
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
+    echo %YELLOW% "%CYAN%Main menu%YELLOW%"
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
     :: Array to store the scritps names 
     set "module="
     set /a i=0
     :: Read archive lines
-    echo %ModulesFile%
     for /f "tokens=*" %%a in (%ModulesFile%) do (
         set "module[!i!]=%%a"
         set /a i+=1
@@ -107,37 +105,25 @@ if %FolderTest% neq 0 (
     set Exit=%j%+1
 
     :: Show option to the user
-    echo Choose a module to open
-    for /L %%a in (0,1,!i!) do call echo %%a - %%module[%%a]%%
+    echo  %WHITE%Choose a module to open
+    for /L %%a in (0,1,!i!) do call echo   !YELLOW![!WHITE!%%a!YELLOW!] - !WHITE!%%module[%%a]%%
 
 
-    set /p input="Option: "
-    if /i "%input%" LEQ "%i%" goto ScriptMenu
+    set /p input=%WHITE%%nl% - Option: 
+    if /i "%input%" LEQ "%i%" goto ModuleMenu
     if /i "%input%" EQU "%Exit%"( 
         goto end
     ) else (
         echo Invalid option
     )
 
-
-
-
-::-----------Functions------------::
-
-@REM :RunScript
-:: Read and execute each line of the script
-@REM for /f "tokens=*" %%a in (%1) do (
-@REM     %%a
-@REM     if !ERRORLEVEL! neq 0 (
-@REM         exit /b 1
-@REM     )
-@REM )
-@REM call %1
-@REM exit /b 0
-
-:ScriptMenu
+:ModuleMenu
     setlocal EnableDelayedExpansion
+    cls
     :: Array to store the scritps names 
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
+    echo  %CYAN%Main menu /%YELLOW% "%CYAN%Module Menu%YELLOW%"
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
     set "script="
     set /a j=0
     :: Read archive lines
@@ -146,41 +132,129 @@ if %FolderTest% neq 0 (
         set /a j+=1
     )
 
+    Set ActualModule=!module[%input%]!
     set /a j-=1
     :: Show option to the use r
-    echo Choose a script to open
-    for /L %%a in (0,1,!j!) do call echo %%a - %%script[%%a]%%
-    set Exit=%j%+1
+    echo  %WHITE%Choose a module to open
+
+    for /L %%a in (0,1,!j!) do ( 
+        call :PrintAuxiliarArchive !script[%%a]! "title.txt" "!YELLOW![!WHITE!%%a!YELLOW!] - !WHITE!%1" "T"
+    )
+    set /a Exit=%j%+1
+    call echo  !YELLOW![!WHITE!%Exit%!YELLOW!] - %WHITE%Go back to Main Menu
 
     :: Read option and execute script if is valid
-    set /p escolha="Option: "
-    if /i "%escolha%" LEQ "%j%" (
-        set ExecDir=%2\%3\!script[%escolha%]!
-        echo Running script %ExecDir%
-        call :MenuScript !ExecDir!
-    ) 
-    if /i "%escolha%" equ "%Exit%" (
-
-        :MenuModules_options
+    set /p input=%WHITE%%nl% - Option: 
+    if /i "%input%" LEQ "%j%" (
+        call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%input%]! !script[%input%]! 
+    ) else if /i "%input%" equ "%Exit%" (
+        goto MainMenu
     ) else ( 
-        call inputMissmatch %escolha%
+        call :inputMissmatch %input%
+        goto :ModuleMenu
     )
     goto MainMenu
 
+:ScriptMenu
+    :ScriptAscii
+    cls
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
+    echo  %CYAN%Main menu / Module Menu /%YELLOW% "%CYAN%%2%YELLOW%"
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-:MenuScript
-echo run script or not?
-set /p escolha="Option: "
-echo %1
-if /i %escolha% equ 0 ( 
-	call %1\undo.bat
-	exit /b 0
-)
-if /i %escolha% equ 1 ( 
-	call %1\do.bat 
-	exit /b 0
-)
-exit /b 1
+    echo %NL% Description:
+    call :PrintAuxiliarArchive %2 "description.txt" "There is no description" "D"
+    call :PrintAuxiliarArchive 
+
+    echo %1\do.bat
+    pause
+    if exist %1\do.bat (
+        pause
+        goto test
+        @REM if exist %1\undo.bat (
+            echo %YELLOW%[%WHITE%0%YELLOW%]%WHITE% Do		%YELLOW%[%WHITE%1%YELLOW%]%WHITE% Undo		%YELLOW%[%WHITE%2%YELLOW%]%WHITE% Go back to Module Menu
+            set /p escolha="Option: "
+            if /i %escolha% equ 0 ( 
+                call %1\do.bat
+                exit /b 0
+            ) else if /i %escolha% equ 1 ( 
+                call %1\undo.bat 
+                exit /b 0
+            ) else if /i %escolha% equ 2 (
+                exit /b 0
+            ) else (
+                call :inputMissmatch %escolha%
+            )
+        :endTest
+        @REM ) else (
+        @REM     echo %RED%CAUTION%WHITE%: this script does not have an undo file, so this maybe cannot be reversible without a restore point
+        @REM     echo %YELLOW%[%WHITE%0%YELLOW%]%WHITE% Do		%YELLOW%[%WHITE%2%YELLOW%]%WHITE% go back
+        @REM     set /p escolha="Option: "
+        @REM     if /i %escolha% equ 0 ( 
+        @REM         call %1\do.bat
+        @REM         exit /b 0
+        @REM     ) else if /i %escolha% equ 1 ( 
+        @REM         call %1\undo.bat 
+        @REM         exit /b 0
+        @REM     ) else if /i %escolha% equ 2 (
+        @REM         exit /b 0
+        @REM     ) else (
+        @REM         call :inputMissmatch %escolha%
+        @REM     )
+        @REM )
+    ) else (
+        echo %RED%Broken%WHITE%, do.bat does not exist.
+        pause>nul|set/p =%WHITE%Press any key to go back...
+    )
+    
+    pause
+    exit /b 0
+
+:test
+    echo %YELLOW%[%WHITE%0%YELLOW%]%WHITE% Do		%YELLOW%[%WHITE%1%YELLOW%]%WHITE% Undo		%YELLOW%[%WHITE%2%YELLOW%]%WHITE% Go back to Module Menu
+    set /p escolha="Option: "
+    if /i %escolha% equ 0 ( 
+        call %1\do.bat
+    ) else if /i %escolha% equ 1 ( 
+        call %1\undo.bat 
+    ) else if /i %escolha% equ 2 (
+        goto endTest
+    ) else (
+        call :inputMissmatch %escolha%
+    )
+    goto endTest
+
+:PrintAuxiliarArchive
+    if exist %ScriptsDir%\%ActualModule%\%1\%~2 (
+        call :PrintModule %ScriptsDir%\%ActualModule%\%1\%~2 %4
+    ) else (
+        if %4 equ "T" (
+            call echo  %~3%1
+        ) else (
+            call echo   %~3
+        )
+    )
+    exit /b 0
+
+:PrintModule
+    if %2 equ "T" (
+        for /f "tokens=*" %%b in (%1) do (
+            call echo  %Aux%!YELLOW![!WHITE!%%a!YELLOW!] - %WHITE%%%b 
+        )
+    ) else if %2 equ "D" (
+        for /f "tokens=*" %%b in (%1) do (
+            call echo  %WHITE%%%b
+        )
+    ) else (
+        echo %RED%Error in the code, some PrintAuxiliarArchive call have the wrong code in the last parameter.
+        echo Parameter %2 does not exist
+    )
+    
+    exit /b 0
+
+::-----------------------------------------------------------------------------::
+::-------------------------------END-MAIN-MENU---------------------------------::
+::-----------------------------------------------------------------------------::
 
 ::-------------------------------SETUP---------------------------------::
 :: - Acessible only without admin (because running in admin, the       ::
@@ -193,12 +267,12 @@ exit /b 1
     call :SetupAscii
     echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
     echo %BLUE%║%WHITE% Error accessing the auxiliar files in AppData. Do you want to create a new folder?		   	%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %GREEN%Create folder											%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %RED%Exit												%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %GREEN%Create folder											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %RED%Exit												%BLUE%║
     echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
     set /p input=%WHITE%- Option: 
-    if /i "%input%" equ "1" goto creating
-    if /i "%input%" equ "2" goto end
+    if /i "%input%" equ "0" goto creating
+    if /i "%input%" equ "1" goto end
     call :inputMissmatch %input%
     goto AdminChoice
 
@@ -207,16 +281,16 @@ exit /b 1
     call :SetupAscii
     echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
     echo %BLUE%║%WHITE% What do you want to do?										%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %WHITE%Update folder											%BLUE%║
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %WHITE%Remove folder											%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %WHITE%Update folder											%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%3%YELLOW%] - %WHITE%Run program											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %WHITE%Run program											%BLUE%║
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%4%YELLOW%] - %WHITE%Exit												%BLUE%║
     echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
     set /p input=%WHITE%- Option: 
+    if /i "%input%" equ "0" goto removingAndCreating
     if /i "%input%" equ "1" goto removing
-    if /i "%input%" equ "2" goto removingAndCreating
-    if /i "%input%" equ "3" goto run
-    if /i "%input%" equ "4" goto end
+    if /i "%input%" equ "2" goto OpenAdmin
+    if /i "%input%" equ "3" goto end
     goto end
 
 
@@ -232,24 +306,15 @@ exit /b 1
     mkdir "%AsciiDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "'%AsciiDir%' created" "creation of '%AsciiDir%'"
-    mkdir "%MenusDir%" >nul 2>&1
-    set /A bugs+=!ERRORLEVEL!
-    call :CommandMensage !ERRORLEVEL! "'%MenusDir%' created" "creation of '%MenusDir%'"
     xcopy /s ".\scripts" "%ScriptsDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "Copy of scripts made" "copy of the scripts"
-    xcopy /s ".\menus" "%MenusDir%" >nul 2>&1
-    set /A bugs+=!ERRORLEVEL!
-    call :CommandMensage !ERRORLEVEL! "Copy of menus made" "copy of the menus"
     copy ".\asciiArts" "%AsciiDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "Copy of ascii arts made" "copy of the ascii arts"
-    dir /b "%MenusDir%" > "%MenusFile%"
-    @REM dir /B | find /V ".txt" "%MenusDir%" > "%MenusFile%"
-    set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "'%MenusFile%' created" "creation of '%MenusFile%'"
     dir /b "%ScriptsDir%" > "%ModulesFile%"
-    @REM dir /B | find /V ".txt" "%ScriptsDir%" > "%ModulesFile%"
+    @REM dir /B | find /V ".txt" "%ScriptsDir%" > "%ModulesFile%"        Comando para remover .txt dos diretorios listados, mas não funcion
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "'%ModulesFile%' created" "creation of '%ModulesFile%'"
     for /f "tokens=*" %%a in (%ModulesFile%) do (
@@ -366,6 +431,12 @@ echo ║ %CYAN%Made by LuisAugusto0 (GitHub)%BLUE%										║
 echo ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝                          
 exit /b 0
 
+:ErrorAscii
+echo %BLUE%
+for /f "tokens=*" %%a in (%AsciiDir%\splash.txt) do ( echo %%a )   
+echo %WHITE%                   
+exit /b 0
+
 :SetupAscii
 echo %BLUE%
 for /f "tokens=*" %%a in (.\asciiArts\setup.txt) do ( echo %%a )
@@ -378,10 +449,17 @@ for /f "tokens=*" %%a in (%AsciiDir%\menu.txt) do ( echo %%a )
 echo %WHITE%
 exit /b 0
 
+:ScriptAscii
+echo %BLUE%
+for /f "tokens=*" %%a in (%AsciiDir%\splash.txt) do ( echo %%a )
+echo %WHITE%
+exit /b 0
+
 :inputMissmatch
 cls
-echo Input '%1' does not correspond to any option in menu, try typing again
-timeout 4 > nul
+call :ErrorAscii
+echo Input '%1' does not correspond to any option in menu
+pause > nul|set/p =%WHITE%Press any key and try again...
 exit /b 0
 
 ::SET
@@ -389,7 +467,7 @@ exit /b 0
 :SetColors
 :: Color and other ascii support config
 chcp 65001 >nul 2>&1
-mode con lines=100 cols=140
+mode con lines=60 cols=140
 title WindowScript Setup
 for /f "tokens=*" %%a in ('echo prompt $E^|cmd') do set "ESC=%%a"
 :: Colors
@@ -416,7 +494,6 @@ exit /b 0
 set "AuxArqSufix=.txt"
 set "StartDir=c:\Users\%USERNAME%\AppData\Local\WinscriptRunner"
 set "ScriptsDir=%StartDir%\scripts"
-set "MenusDir=%StartDir%\menus"
 set "AsciiDir=%StartDir%\asciiArts"
 set "ModulesFile=%StartDir%\modules%AuxArqSufix%"
 set "MenusFile=%StartDir%\menus%AuxArqSufix%"
@@ -425,11 +502,6 @@ set "ScriptsNamesSufix=_names%AuxArqSufix%"
 set "RunSufix=.bat"
 set "Version=0.21"
 set "Input=0"
-
-@REM :ResetVariables
-@REM set "ScriptsDir=!OldPath[0]!\scripts"
-@REM set "MenusDir=!OldPath[0]!\menus"
-@REM set "AsciiDir=!OldPath[0]!\commonFiles"
 
 :: Creating a Newline variable (the two blank lines are required!)
 set NLM=^
