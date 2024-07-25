@@ -1,0 +1,1 @@
+to run the legacy code just copy and paste the .bat files in the WinScript folder

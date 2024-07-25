@@ -12,64 +12,12 @@ call :SetColors
 SETLOCAL EnableDelayedExpansion
 :: Check Administrator Privileges
 net session >nul 2>&1
-set AdminTest=%ERRORLEVEL%
-
-::Check if files exists
-cd "%StartDir%" >nul 2>&1
-set FolderTest=%ERRORLEVEL%   
-
-cd "%AsciiDir%" >nul 2>&1
-set FilesTest=%ERRORLEVEL%  
-
-if not exist %ModulesFile% (
-    set FilesTest+=1
+if %ERRORLEVEL% neq 0 (
+    goto removingAndCreating
 ) else (
-    for /f "tokens=*" %%a in (%ModulesFile%) do (
-        if not exist %StartDir%\%%a%ScriptsNamesSufix% ( set FilesTest+=1 )
-    )
+    echo Open without admin wrights
+    goto end
 )
-
-if not exist %MenusFile% set FilesTest+=1
-
-
-if %FolderTest% neq 0 (
-    if %AdminTest% neq 0 ( 
-        call :SplashAscii
-        goto InitialSetup 
-    ) else (
-        echo %white%Open without Admin to the initial setup
-        goto end
-    )
-	:: Running a new tab in Admin and closing actual flow
-    exit
-) else (
-    @REM ::reset variables to the correct path (read in the PathFile)
-    @REM call :ResetVariables
-    if %FilesTest% equ 0 (
-        if %AdminTest% neq 0 (
-            goto AdminChoice
-        ) else (
-            call :SplashAscii
-            goto MainMenu
-        )
-    ) else (
-        goto InitialSetup
-    )
-)
-
-:AdminChoice
-    cls
-    call :SplashAsciiNoStop
-    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
-    echo %BLUE%║%WHITE% Do you want to enter the setup menu?	    	        		    				%BLUE%║
-    echo %BLUE%║%YELLOW% [%WHITE%0%YELLOW%] - %WHITE%No	%YELLOW% [%WHITE%1%YELLOW%] - %WHITE%Yes 										%BLUE%║
-    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
-    set /p input=%WHITE%:
-    if /i "%input%" equ "0" goto OpenAdmin
-    if /i "%input%" equ "1" goto ModifySetup 
-    ::else
-    call :inputMissmatch %input%
-    goto AdminChoice
 
 :OpenAdmin
     @REM echo %white%Opening with admin rights...
@@ -334,45 +282,6 @@ if %FolderTest% neq 0 (
 ::-------------------------------END-MAIN-MENU---------------------------------::
 ::-----------------------------------------------------------------------------::
 
-::-------------------------------SETUP---------------------------------::
-:: - Acessible only without admin (because running in admin, the       ::
-::      actual dir change to System32, loosing track of the real dir)  ::
-:: - Create, update and deleate the auxiliar files in Appdata          ::
-::---------------------------------------------------------------------::
-
-:InitialSetup
-    cls
-    call :SetupAscii
-    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
-    echo %BLUE%║%WHITE% Error accessing the auxiliar files in AppData. Do you want to create a new folder?		   	%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %RED%Exit												%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %GREEN%Create folder											%BLUE%║
-    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
-    set /p input=%WHITE%: 
-    if /i "%input%" equ "1" goto creating
-    if /i "%input%" equ "0" goto end
-    call :inputMissmatch %input%
-    goto AdminChoice
-
-:ModifySetup
-    cls
-    call :SetupAscii
-    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
-    echo %BLUE%║%WHITE% What do you want to do?										%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %WHITE%Exit												%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %WHITE%Update folder											%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %WHITE%Remove folder											%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%3%YELLOW%] - %WHITE%Run program											%BLUE%║
-
-    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
-    set /p input=%WHITE%: 
-    if /i "%input%" equ "1" goto removingAndCreating
-    if /i "%input%" equ "2" goto removing
-    if /i "%input%" equ "3" goto OpenAdmin
-    if /i "%input%" equ "0" goto end
-    goto end
-
-
 :creating
     cls
     setlocal enabledelayedexpansion
@@ -410,33 +319,7 @@ if %FolderTest% neq 0 (
         echo %RED% !bugs! errors during creation of the folder
     )
     endlocal
-    pause>nul|set/p =%WHITE%Press any key to continue...
-    goto ModifySetup
-
-
-:removing
-    cls
-    rmdir /s /q "%StartDir%" >nul 2>&1
-    if %ERRORLEVEL% EQU 0 (
-        echo %GREEN% Folder deleted with success
-    ) else if %ERRORLEVEL% EQU 2 (
-        echo %GREEN% Folder deleted with success
-    ) else if %ERRORLEVEL% EQU 5 (
-        echo %RED% The %ERRORLEVEL% error occurred during the deletion, trying to delete with admin rights...
-        echo rmdir /s /q @echo off"%StartDir%" > "%cd%/tmp.bat"
-        powershell "Start-Process %cd%\tmp.bat -Verb RunAs"
-        del %cd%\tmp.bat
-        pause>nul|set/p =%WHITE%Press any key to continue...
-    ) else (
-        echo %RED% The %ERRORLEVEL% error occurred during the deletion
-        pause>nul|set/p =%WHITE%Press any key to continue...
-    )
-    pause>nul|set/p =%WHITE%Press any key to continue...
-    goto InitialSetup
-    
-:uninstall
-    rmdir /s /q "%StartDir%" >nul 2>&1
-    goto end
+    goto OpenAdmin
 
 :removingAndCreating
     rmdir /s /q "%StartDir%" >nul 2>&1
@@ -464,8 +347,6 @@ if %FolderTest% neq 0 (
         echo %RED%An error occurred during the %~3
     )
     exit /b 0
-:run
-	pause
 
 ::---------------------------------------------------------------------::
 ::------------------------------END-SETUP------------------------------::
