@@ -62,9 +62,9 @@ if %FolderTest% neq 0 (
     call :SplashAsciiNoStop
     echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
     echo %BLUE%║%WHITE% Do you want to enter the setup menu?	    	        		    				%BLUE%║
-    echo %BLUE%║%YELLOW%[%WHITE%0%YELLOW%] - %WHITE%No	%YELLOW% [%WHITE%1%YELLOW%] - %WHITE%Yes 										%BLUE%║
+    echo %BLUE%║%YELLOW% [%WHITE%0%YELLOW%] - %WHITE%No	%YELLOW% [%WHITE%1%YELLOW%] - %WHITE%Yes 										%BLUE%║
     echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
-    set /p input=%WHITE%- Option: 
+    set /p input=%WHITE%:
     if /i "%input%" equ "0" goto OpenAdmin
     if /i "%input%" equ "1" goto ModifySetup 
     ::else
@@ -72,7 +72,7 @@ if %FolderTest% neq 0 (
     goto AdminChoice
 
 :OpenAdmin
-    @REM echo %NL%%white%Opening with admin rights...
+    @REM echo %white%Opening with admin rights...
     @REM timeout 2 > nul
     powershell -Command "Start-Process %cd%\WS_Runner.bat -Verb RunAs"
 	exit /b 0
@@ -89,7 +89,6 @@ if %FolderTest% neq 0 (
     setlocal EnableDelayedExpansion
     cls 
     call :MainMenuAscii
-
     echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
     echo %YELLOW% "%CYAN%Main menu%YELLOW%"
     echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -109,9 +108,9 @@ if %FolderTest% neq 0 (
     for /L %%a in (0,1,!i!) do call echo   !YELLOW![!WHITE!%%a!YELLOW!] - !WHITE!%%module[%%a]%%
 
 
-    set /p input=%WHITE%%nl% - Option: 
-    if /i "%input%" LEQ "%i%" goto ModuleMenu
-    if /i "%input%" EQU "%Exit%"( 
+    set /p inputM=%WHITE%: 
+    if /i "%inputM%" LEQ "%i%" goto ModuleMenu
+    if /i "%inputM%" EQU "%Exit%"( 
         goto end
     ) else (
         echo Invalid option
@@ -120,118 +119,177 @@ if %FolderTest% neq 0 (
 :ModuleMenu
     setlocal EnableDelayedExpansion
     cls
+    call :ModuleAscii
     :: Array to store the scritps names 
     echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
-    echo  %CYAN%Main menu /%YELLOW% "%CYAN%Module Menu%YELLOW%"
+    echo  %CYAN%Main menu /%YELLOW% "%CYAN%!module[%inputM%]!%YELLOW%"
     echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
     set "script="
     set /a j=0
     :: Read archive lines
-    for /f "tokens=*" %%a in (%StartDir%/!module[%input%]!%ScriptsNamesSufix%) do (
+    for /f "tokens=*" %%a in (%StartDir%/!module[%inputM%]!%ScriptsNamesSufix%) do (
         set "script[!j!]=%%a"
         set /a j+=1
     )
 
-    Set ActualModule=!module[%input%]!
+    Set ActualModule=!module[%inputM%]!
     set /a j-=1
-    :: Show option to the use r
+    :: Show option to the user
     echo  %WHITE%Choose a module to open
 
     for /L %%a in (0,1,!j!) do ( 
         call :PrintAuxiliarArchive !script[%%a]! "title.txt" "!YELLOW![!WHITE!%%a!YELLOW!] - !WHITE!%1" "T"
     )
     set /a Exit=%j%+1
-    call echo  !YELLOW![!WHITE!%Exit%!YELLOW!] - %WHITE%Go back to Main Menu
+    call echo   !YELLOW![!WHITE!a!YELLOW!] - %WHITE%Run all scripts
+    call echo   !YELLOW![!WHITE!%Exit%!YELLOW!] - %WHITE%Go back to Main Menu
 
     :: Read option and execute script if is valid
-    set /p input=%WHITE%%nl% - Option: 
+    set /p input=%WHITE%: 
     if /i "%input%" LEQ "%j%" (
         call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%input%]! !script[%input%]! 
+        goto ModuleMenu
     ) else if /i "%input%" equ "%Exit%" (
         goto MainMenu
+    ) else if /i "%input%" equ "a" (
+        goto RunAllMenu
     ) else ( 
         call :inputMissmatch %input%
-        goto :ModuleMenu
+        goto ModuleMenu
     )
     goto MainMenu
 
-:ScriptMenu
-    :ScriptAscii
+:RunAllMenu
+    setlocal EnableDelayedExpansion
     cls
+    call :ModuleAscii
+    :: Array to store the scritps names 
     echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
-    echo  %CYAN%Main menu / Module Menu /%YELLOW% "%CYAN%%2%YELLOW%"
+    echo  %CYAN%Main menu /%YELLOW% "%CYAN%!module[%inputM%]!%YELLOW%"
     echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-    echo %NL% Description:
-    call :PrintAuxiliarArchive %2 "description.txt" "There is no description" "D"
-    call :PrintAuxiliarArchive 
-
-    echo %1\do.bat
-    pause
-    if exist %1\do.bat (
-        pause
-        goto test
-        @REM if exist %1\undo.bat (
-            echo %YELLOW%[%WHITE%0%YELLOW%]%WHITE% Do		%YELLOW%[%WHITE%1%YELLOW%]%WHITE% Undo		%YELLOW%[%WHITE%2%YELLOW%]%WHITE% Go back to Module Menu
-            set /p escolha="Option: "
-            if /i %escolha% equ 0 ( 
-                call %1\do.bat
-                exit /b 0
-            ) else if /i %escolha% equ 1 ( 
-                call %1\undo.bat 
-                exit /b 0
-            ) else if /i %escolha% equ 2 (
-                exit /b 0
+    echo  %WHITE%Choose what to do
+    echo   !YELLOW![!WHITE!0!YELLOW!] - %WHITE%Go back
+    echo   !YELLOW![!WHITE!1!YELLOW!] - %WHITE%Run all scripts without confirmation
+    echo   !YELLOW![!WHITE!2!YELLOW!] - %WHITE%Undo all scripts without confirmation
+    echo   !YELLOW![!WHITE!3!YELLOW!] - %WHITE%Run/Undo all scripts with confirmation
+    set /p input=%WHITE%: 
+    if /i "%input%" equ "0" (
+        goto MainMenu
+    ) else if /i "%input%" equ "1" (
+        for /L %%a in (0,1,!j!) do ( 
+            if exist %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat ( 
+                call %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat
+                call :ScriptErrorHandler %ERRORLEVEL% %2         
             ) else (
-                call :inputMissmatch %escolha%
+                echo Script !script[%%a]! doesn't have a do.bat file
             )
-        :endTest
-        @REM ) else (
-        @REM     echo %RED%CAUTION%WHITE%: this script does not have an undo file, so this maybe cannot be reversible without a restore point
-        @REM     echo %YELLOW%[%WHITE%0%YELLOW%]%WHITE% Do		%YELLOW%[%WHITE%2%YELLOW%]%WHITE% go back
-        @REM     set /p escolha="Option: "
-        @REM     if /i %escolha% equ 0 ( 
-        @REM         call %1\do.bat
-        @REM         exit /b 0
-        @REM     ) else if /i %escolha% equ 1 ( 
-        @REM         call %1\undo.bat 
-        @REM         exit /b 0
-        @REM     ) else if /i %escolha% equ 2 (
-        @REM         exit /b 0
-        @REM     ) else (
-        @REM         call :inputMissmatch %escolha%
-        @REM     )
-        @REM )
+        )
+    ) else if /i "%input%" equ "2" (
+        for /L %%a in (0,1,!j!) do ( 
+            if exist %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat ( 
+                call %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat
+                call :ScriptErrorHandler %ERRORLEVEL% %2         
+            ) else (
+                echo Script !script[%%a]! doesn't have a undo.bat file
+            )
+        )
+    ) else if /i "%input%" equ "3" (
+        for /L %%a in (0,1,!j!) do ( 
+            call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%input%]! !script[%input%]!        
+        )
+    ) 
+
+    pause>nul|set/p =%WHITE%Press any key to go back...
+    goto MainMenu
+
+:ScriptMenu
+    cls
+    call :ScriptAscii
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
+    if exist %1\title.txt (
+        for /f "tokens=*" %%b in (%1\title.txt) do (
+            echo  %CYAN%Main menu / !module[%inputM%]! /%YELLOW% "%CYAN%%%b%YELLOW%"
+        )
+    ) else (
+        %CYAN%Main menu / !module[%inputM%]! /%YELLOW% "%CYAN%%2%YELLOW%"
+    )
+    echo %BLUE%═════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+    echo %BLUE% ╔══════════════╗
+    echo %BLUE% ║ %WHITE%Description: %BLUE%║
+    echo %BLUE% ╚══════════════╝
+    call :PrintAuxiliarArchive %2 "description.txt" "There is no description" "D"
+    echo  -------------------------------------------------------------------------------------------------------
+
+    if exist %1\do.bat (
+        goto ScriptMenuAux
     ) else (
         echo %RED%Broken%WHITE%, do.bat does not exist.
-        pause>nul|set/p =%WHITE%Press any key to go back...
+        exit /b 0
     )
     
-    pause
+    :endScript
+    pause>nul|set/p =%WHITE%Press any key to go back...
     exit /b 0
 
-:test
-    echo %YELLOW%[%WHITE%0%YELLOW%]%WHITE% Do		%YELLOW%[%WHITE%1%YELLOW%]%WHITE% Undo		%YELLOW%[%WHITE%2%YELLOW%]%WHITE% Go back to Module Menu
-    set /p escolha="Option: "
-    if /i %escolha% equ 0 ( 
-        call %1\do.bat
-    ) else if /i %escolha% equ 1 ( 
-        call %1\undo.bat 
-    ) else if /i %escolha% equ 2 (
-        goto endTest
+:ScriptMenuAux
+    if exist %1\undo.bat (
+        goto WithUndo
     ) else (
-        call :inputMissmatch %escolha%
+        goto WithoutUndo
     )
+ 
+    
+
+    pause>nul|set/p =%WHITE%Press any key to go back...
     goto endTest
+
+:WithUndo
+    echo %YELLOW% [%WHITE%0%YELLOW%]%WHITE% Do
+    echo %YELLOW% [%WHITE%1%YELLOW%]%WHITE% Undo		
+    echo %YELLOW% [%WHITE%2%YELLOW%]%WHITE% Go back to Modules
+    set /p Aux=%WHITE%:
+    
+    if /i "%Aux%" equ "0" ( 
+        call %1\do.bat
+        call :ScriptErrorHandler %ERRORLEVEL% %2\do.bat
+    ) else if /i "%Aux%" equ "1" ( 
+        call %1\undo.bat 
+        call :ScriptErrorHandler %ERRORLEVEL% %2\undo.bat
+    ) else if /i "%Aux%" equ "2" (
+        goto endScript
+    ) else (
+        call :inputMissmatch %Aux%
+        goto endScript
+    )
+    pause>nul|set/p =%WHITE%Press any key to go back...
+    goto endTest
+
+:WithoutUndo
+       echo %RED% Caution%WHITE%: this Script does not have a undo option
+        echo %YELLOW% [%WHITE%0%YELLOW%]%WHITE% Run
+        echo %YELLOW% [%WHITE%1%YELLOW%]%WHITE% Go back to Modules
+        set /p input=%WHITE%:
+        if /i "%input%" equ "0" ( 
+            call %1\do.bat
+        ) else if /i "%input%" equ "1" ( 
+            goto endScript
+        ) else (
+            call :inputMissmatch %input%
+            goto endScript
+        )
+    pause>nul|set/p =%WHITE%Press any key to go back...
+    goto endTest
+
 
 :PrintAuxiliarArchive
     if exist %ScriptsDir%\%ActualModule%\%1\%~2 (
         call :PrintModule %ScriptsDir%\%ActualModule%\%1\%~2 %4
     ) else (
         if %4 equ "T" (
-            call echo  %~3%1
+            call echo   %WHITE%%~3%1
         ) else (
-            call echo   %~3
+            call echo   %WHITE%%~3
         )
     )
     exit /b 0
@@ -239,11 +297,11 @@ if %FolderTest% neq 0 (
 :PrintModule
     if %2 equ "T" (
         for /f "tokens=*" %%b in (%1) do (
-            call echo  %Aux%!YELLOW![!WHITE!%%a!YELLOW!] - %WHITE%%%b 
+            call echo   !YELLOW![!WHITE!%%a!YELLOW!] - %WHITE%%%b 
         )
     ) else if %2 equ "D" (
         for /f "tokens=*" %%b in (%1) do (
-            call echo  %WHITE%%%b
+            call echo    %WHITE%%%b
         )
     ) else (
         echo %RED%Error in the code, some PrintAuxiliarArchive call have the wrong code in the last parameter.
@@ -252,6 +310,18 @@ if %FolderTest% neq 0 (
     
     exit /b 0
 
+:ScriptErrorHandler
+    if %1 equ 0 (
+        echo Script %2 executed succesfull 
+    ) else if %ERRORLEVEL% equ 1 (
+        echo Script %2 executed, but generated a error code 1.
+        echo Problably a Incorrect funcion. Fix the incorrect function or put "exit \b" on the end of script to remove this error
+    ) else if %ERRORLEVEL% equ 9009 (
+        echo Script %2 closed with error code 9009, because of a line that isn't a command
+    ) else (
+        echo An error occurred with Script %2. Error code: %ERRORLEVEL%
+    )
+    exit /b 0
 ::-----------------------------------------------------------------------------::
 ::-------------------------------END-MAIN-MENU---------------------------------::
 ::-----------------------------------------------------------------------------::
@@ -270,7 +340,7 @@ if %FolderTest% neq 0 (
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %GREEN%Create folder											%BLUE%║
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %RED%Exit												%BLUE%║
     echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
-    set /p input=%WHITE%- Option: 
+    set /p input=%WHITE%: 
     if /i "%input%" equ "0" goto creating
     if /i "%input%" equ "1" goto end
     call :inputMissmatch %input%
@@ -284,9 +354,9 @@ if %FolderTest% neq 0 (
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %WHITE%Update folder											%BLUE%║
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %WHITE%Remove folder											%BLUE%║
     echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %WHITE%Run program											%BLUE%║
-    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%4%YELLOW%] - %WHITE%Exit												%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%3%YELLOW%] - %WHITE%Exit												%BLUE%║
     echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
-    set /p input=%WHITE%- Option: 
+    set /p input=%WHITE%: 
     if /i "%input%" equ "0" goto removingAndCreating
     if /i "%input%" equ "1" goto removing
     if /i "%input%" equ "2" goto OpenAdmin
@@ -295,6 +365,7 @@ if %FolderTest% neq 0 (
 
 
 :creating
+    cls
     setlocal enabledelayedexpansion
     set /A bugs=0
     mkdir "%StartDir%" >nul 2>&1
@@ -335,16 +406,23 @@ if %FolderTest% neq 0 (
 
 
 :removing
+    cls
     rmdir /s /q "%StartDir%" >nul 2>&1
     if %ERRORLEVEL% EQU 0 (
         echo %GREEN% Folder deleted with success
-        pause>nul|set/p =%WHITE%Press any key to continue...
     ) else if %ERRORLEVEL% EQU 2 (
         echo %GREEN% Folder deleted with success
+    ) else if %ERRORLEVEL% EQU 5 (
+        echo %RED% The %ERRORLEVEL% error occurred during the deletion, trying to delete with admin rights...
+        echo rmdir /s /q @echo off"%StartDir%" > "%cd%/tmp.bat"
+        powershell "Start-Process %cd%\tmp.bat -Verb RunAs"
+        del %cd%\tmp.bat
         pause>nul|set/p =%WHITE%Press any key to continue...
     ) else (
-        echo %RED% An error occurred during the deletion
+        echo %RED% The %ERRORLEVEL% error occurred during the deletion
+        pause>nul|set/p =%WHITE%Press any key to continue...
     )
+    pause>nul|set/p =%WHITE%Press any key to continue...
     goto InitialSetup
     
 :uninstall
@@ -353,13 +431,20 @@ if %FolderTest% neq 0 (
 
 :removingAndCreating
     rmdir /s /q "%StartDir%" >nul 2>&1
-    @REM if %ERRORLEVEL% EQU 0 (
-    @REM     echo %GREEN% Folder deleted with success
-    @REM ) else if %ERRORLEVEL% EQU 2 (
-    @REM     echo %GREEN% Folder deleted with success
-    @REM ) else (
-    @REM     echo %RED% An error occurred during the deletion
-    @REM )
+    if %ERRORLEVEL% EQU 0 (
+        echo %GREEN% Folder deleted with success
+    ) else if %ERRORLEVEL% EQU 2 (
+        echo %GREEN% Folder deleted with success
+    ) else if %ERRORLEVEL% EQU 5 (
+        echo %RED% The %ERRORLEVEL% error occurred during the deletion, trying to delete with admin rights...
+        echo rmdir /s /q @echo off"%StartDir%" > "%cd%/tmp.bat"
+        powershell "Start-Process %cd%\tmp.bat -Verb RunAs"
+        del %cd%\tmp.bat
+        pause>nul|set/p =%WHITE%Press any key to continue...
+    ) else (
+        echo %RED% The %ERRORLEVEL% error occurred during the deletion
+        pause>nul|set/p =%WHITE%Press any key to continue...
+    )
     call :CommandMensage !ERRORLEVEL! "'%StartDir%' and subdir deleted" "deletion of '%StartDir%'"
     goto creating
 
@@ -449,6 +534,12 @@ for /f "tokens=*" %%a in (%AsciiDir%\menu.txt) do ( echo %%a )
 echo %WHITE%
 exit /b 0
 
+:ModuleAscii
+echo %BLUE%
+for /f "tokens=*" %%a in (%AsciiDir%\modules.txt) do ( echo %%a )
+echo %WHITE%
+exit /b 0
+
 :ScriptAscii
 echo %BLUE%
 for /f "tokens=*" %%a in (%AsciiDir%\splash.txt) do ( echo %%a )
@@ -492,7 +583,7 @@ exit /b 0
 :: Common variables
 :SetVariables
 set "AuxArqSufix=.txt"
-set "StartDir=c:\Users\%USERNAME%\AppData\Local\WinscriptRunner"
+set "StartDir=c:\WinscriptRunner"
 set "ScriptsDir=%StartDir%\scripts"
 set "AsciiDir=%StartDir%\asciiArts"
 set "ModulesFile=%StartDir%\modules%AuxArqSufix%"
@@ -503,9 +594,9 @@ set "RunSufix=.bat"
 set "Version=0.21"
 set "Input=0"
 
-:: Creating a Newline variable (the two blank lines are required!)
-set NLM=^
+@REM :: Creating a Newline variable (the two blank lines are required!)
+@REM set NLM=^
 
 
-set NL=^^^%NLM%%NLM%^%NLM%%NLM%
+@REM set NL=^^^%NLM%%NLM%^%NLM%%NLM%
 exit /b 0
