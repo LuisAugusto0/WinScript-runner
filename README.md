@@ -50,12 +50,13 @@ Each script is located within its respective folder under the modules directory.
   * `description.txt`:
   Optional file. If present, provides a description of the script in the script menu. If absent, a default "there is no description" text is displayed.
 
-###### To add more scripts and modules you need to keep this structure
+###### To add more scripts and modules you need to keep this structure and never create a folder with space in the name
 ###### When setup runs, a copy of all archives are made in auxiliar folder to make the acess with admin rights more easy.
 
 ## Future Additions: Enhancing WinScript Runner
 To enhance user experience with WinScript Runner, there are some ideas of new features: 
   * One significant enhancement for WinScript Runner would be the implementation of an "Add Script" tool. This tool would provide users with a straightforward method to incorporate new scripts into the existing framework with less troble.
+  * Add title.txt support to the modules
   * Tracking and Managing Run Scripts with Undo Capability:
      * Maintain a log or history within the program that records scripts executed using WinScript Runner.
      * Highlight scripts that have associated undo scripts (undo.bat) in the Script Menu for easy identification.
