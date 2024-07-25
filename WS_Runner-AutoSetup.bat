@@ -53,6 +53,7 @@ if %ERRORLEVEL% neq 0 (
 
     :: Show option to the user
     echo   !YELLOW![!WHITE!%Exit%!YELLOW!] -!WHITE! Exit program
+    echo   !YELLOW![!WHITE!r!YELLOW!] -!WHITE! Restore point
     echo  ---------------------------
     for /L %%a in (1,1,!i!) do call echo   !YELLOW![!WHITE!%%a!YELLOW!] - !WHITE!%%module[%%a]%%
 
@@ -60,12 +61,52 @@ if %ERRORLEVEL% neq 0 (
     set /p inputM=%WHITE%: 
     if /i "%inputM%" EQU "%Exit%" ( 
         goto end
+    ) else if /i "%inputM%" EQU "r" (
+        goto RestoreMenu
     ) else if /i "%inputM%" LEQ "%i%" (
         goto ModuleMenu
     ) else (
         call :inputMissmatch %inputM%
         goto MainMenu
     )
+
+:RestoreMenu
+    cls
+    call :RestorePointAscii
+    echo   !YELLOW![!WHITE!%Exit%!YELLOW!] - %WHITE%Go back to Main Menu
+    echo  -----------------------------------
+    echo  !YELLOW![!WHITE!1!YELLOW!] -!WHITE! Create a Restore point
+    echo  !YELLOW![!WHITE!2!YELLOW!] -!WHITE! Use a Restore point
+    set /p input=%WHITE%: 
+    if /i "%input%" EQU "%Exit%" ( 
+        goto MainMenu
+    ) else if /i "%input%" EQU "1" (
+        goto CreateRestore
+    ) else if /i "%input%" LEQ "2" (
+        goto UseRestore
+    ) else (
+        call :inputMissmatch %input%
+        goto MainMenu
+    )
+
+:CreateRestore
+    ::Enable Restore points and create restore points
+    chcp 437 >nul 2>&1
+    powershell -NoProfile Enable-ComputerRestore -Drive 'C:\'>nul 2>&1
+    Reg.exe delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "RPSessionInterval" /f  >nul 2>&1
+    Reg.exe delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "DisableConfig" /f >nul 2>&1
+    Reg.exe add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+    %b%
+    powershell -Command "Checkpoint-Computer -Description 'Windows Script Runner Restore Point' -RestorePointType 'MODIFY_SETTINGS'" 
+    chcp 65001 >nul 2>&1
+    goto MainMenu
+
+
+:UseRestore
+    cls
+    rstrui.exe
+    goto MainMenu
+
 
 :ModuleMenu
     setlocal EnableDelayedExpansion
@@ -435,6 +476,12 @@ exit /b 0
 :ScriptAscii
 echo %BLUE%
 for /f "tokens=*" %%a in (%AsciiDir%\splash.txt) do ( echo %%a )
+echo %WHITE%
+exit /b 0
+
+:RestorePointAscii
+echo %BLUE%
+for /f "tokens=*" %%a in (%AsciiDir%\restore.txt) do ( echo %%a )
 echo %WHITE%
 exit /b 0
 
