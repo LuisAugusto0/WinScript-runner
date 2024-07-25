@@ -4,7 +4,7 @@ This tool is an experimental project created to simplify the execution of multip
 
 ## Overview:
 WinScript Runner is a simple tool designed to streamline the execution and management of scripts on Windows systems. It provides a interface for 
-executing scripts efficiently and flexibility to add more scripts. The main focus in this aplication is to windows modification scripts, but can be used as any type of batch script runner.<br>
+executing scripts efficiently and flexibility to add more scripts. The main focus in this aplication is to run windows modification scripts, but can be used as any type of batch script runner.<br>
 This overview will cover the program's functionalities and how scripts and related files are distributed within its directory structure.
 
 
