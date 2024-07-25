@@ -257,6 +257,7 @@ if %FolderTest% neq 0 (
     
     set /p Aux=%WHITE%:
     
+    cls
     if /i "%Aux%" equ "1" ( 
         call %1\do.bat
         call :ScriptErrorHandler %ERRORLEVEL% %2\do.bat
@@ -269,7 +270,7 @@ if %FolderTest% neq 0 (
         call :inputMissmatch %Aux%
         goto endScript
     )
-    pause>nul|set/p =%WHITE%Press any key to go back...
+    
     goto endScript
 
 :WithoutUndo
@@ -278,6 +279,7 @@ if %FolderTest% neq 0 (
         echo %YELLOW% [%WHITE%0%YELLOW%]%WHITE% Go back to Modules
         echo %YELLOW% [%WHITE%1%YELLOW%]%WHITE% Run
         set /p input=%WHITE%:
+        cls
         if /i "%input%" equ "1" ( 
             call %1\do.bat
         ) else if /i "%input%" equ "0" ( 
@@ -286,7 +288,7 @@ if %FolderTest% neq 0 (
             call :inputMissmatch %input%
             goto endScript
         )
-    pause>nul|set/p =%WHITE%Press any key to go back...
+    
     goto endScript
 
 
@@ -320,14 +322,14 @@ if %FolderTest% neq 0 (
 
 :ScriptErrorHandler
     if %1 equ 0 (
-        echo Script %2 executed succesfull 
+        echo %GREEN%Script %2 executed succesfull 
     ) else if %ERRORLEVEL% equ 1 (
-        echo Script %2 executed, but generated a error code 1.
-        echo Problably a Incorrect funcion. Fix the incorrect function or put "exit \b" on the end of script to remove this error
+        echo %GREEN%Script %2 executed, %RED%but generated a error code 1.
+        echo Problably have a Incorrect funcion. Fix the incorrect function or put "exit \b" on the end of script to remove this error
     ) else if %ERRORLEVEL% equ 9009 (
-        echo Script %2 closed with error code 9009, because of a line that isn't a command
+        echo %RED%Script %2 closed with error code 9009, because of a line that isn't a command
     ) else (
-        echo An error occurred with Script %2. Error code: %ERRORLEVEL%
+        echo %RED%An error occurred with Script %2. Error code: %ERRORLEVEL%
     )
     exit /b 0
 ::-----------------------------------------------------------------------------::
@@ -600,7 +602,7 @@ set "MenusFile=%StartDir%\menus%AuxArqSufix%"
 set "PathFile=%StartDir%\initialPath%AuxArqSufix%"
 set "ScriptsNamesSufix=_names%AuxArqSufix%"
 set "RunSufix=.bat"
-set "Version=1.0"
+set "Version=1.01"
 set /a input=0
 set /a Exit=0
 
