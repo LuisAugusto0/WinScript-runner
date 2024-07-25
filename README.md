@@ -61,4 +61,5 @@ To enhance user experience with WinScript Runner, there are some ideas of new fe
      * Highlight scripts that have associated undo scripts (undo.bat) in the Script Menu for easy identification.
      * Enhance the script menu interface to clearly indicate which scripts have been executed and offer the option to undo changes.
   * Implement advanced search and filtering capabilities within the modules and scripts menus for easier navigation and organization.
+  * Other language support, not only english
 
