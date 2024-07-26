@@ -1,0 +1,8 @@
+The batch code disables background apps, search functionality, and specific services related to 
+background activity moderation in Windows. 
+
+(Background apps in Windows are applications that continue to perform actions even when you’re 
+not actively using them. These apps run in the background, consuming system resources, memory, 
+and CPU power.)
+
+Taken from EXM free utility tool "Discord.gg/exm"

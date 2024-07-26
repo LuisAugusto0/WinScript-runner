@@ -12,18 +12,69 @@ call :SetColors
 SETLOCAL EnableDelayedExpansion
 :: Check Administrator Privileges
 net session >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    goto removingAndCreating
+set AdminTest=%ERRORLEVEL%
+
+::Check if files exists
+cd "%StartDir%" >nul 2>&1
+set FolderTest=%ERRORLEVEL%   
+
+cd "%AsciiDir%" >nul 2>&1
+set FilesTest=%ERRORLEVEL%  
+
+if not exist %ModulesFile% (
+    set FilesTest+=1
 ) else (
-    if "%1" equ "run" goto MainMenu
-    echo Open without admin wrights
-    goto end
+    for /f "tokens=*" %%a in (%ModulesFile%) do (
+        if not exist %StartDir%\%%a%ScriptsNamesSufix% ( set FilesTest+=1 )
+    )
 )
+
+if not exist %MenusFile% set FilesTest+=1
+
+
+if %FolderTest% neq 0 (
+    if %AdminTest% neq 0 ( 
+        call :SplashAscii
+        goto InitialSetup 
+    ) else (
+        echo %white%Open without Admin to the initial setup
+        goto end
+    )
+	:: Running a new tab in Admin and closing actual flow
+    exit
+) else (
+    @REM ::reset variables to the correct path (read in the PathFile)
+    @REM call :ResetVariables
+    if %FilesTest% equ 0 (
+        if %AdminTest% neq 0 (
+            goto AdminChoice
+        ) else (
+            call :SplashAscii
+            goto MainMenu
+        )
+    ) else (
+        goto InitialSetup
+    )
+)
+
+:AdminChoice
+    cls
+    call :SplashAsciiNoStop
+    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    echo %BLUE%║%WHITE% Do you want to enter the setup menu?	    	        		    				%BLUE%║
+    echo %BLUE%║%YELLOW% [%WHITE%0%YELLOW%] - %WHITE%No	%YELLOW% [%WHITE%1%YELLOW%] - %WHITE%Yes 										%BLUE%║
+    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+    set /p input=%WHITE%:
+    if /i "%input%" equ "0" goto OpenAdmin
+    if /i "%input%" equ "1" goto ModifySetup 
+    ::else
+    call :inputMissmatch %input%
+    goto AdminChoice
 
 :OpenAdmin
     @REM echo %white%Opening with admin rights...
     @REM timeout 2 > nul
-    powershell -Command "Start-Process %StartDir%\WS_Runner.bat run -Verb RunAs"
+    powershell -Command "Start-Process %cd%\WS_Runner.bat -Verb RunAs"
 	exit /b 0
 ::-------------------------------------------------------------------------------::
 ::--------------------------------END-Startup------------------------------------::
@@ -108,7 +159,6 @@ if %ERRORLEVEL% neq 0 (
     rstrui.exe
     goto MainMenu
 
-
 :ModuleMenu
     setlocal EnableDelayedExpansion
     cls
@@ -173,7 +223,7 @@ if %ERRORLEVEL% neq 0 (
     ) else if /i "%input%" equ "1" (
         for /L %%a in (0,1,!j!) do ( 
             if exist %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat ( 
-                call %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat %1
+                call %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat
                 call :ScriptErrorHandler %ERRORLEVEL% %2         
             ) else (
                 echo Script !script[%%a]! doesn't have a do.bat file
@@ -182,7 +232,7 @@ if %ERRORLEVEL% neq 0 (
     ) else if /i "%input%" equ "2" (
         for /L %%a in (0,1,!j!) do ( 
             if exist %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat ( 
-                call %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat #1
+                call %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat
                 call :ScriptErrorHandler %ERRORLEVEL% %2         
             ) else (
                 echo Script !script[%%a]! doesn't have a undo.bat file
@@ -249,10 +299,10 @@ if %ERRORLEVEL% neq 0 (
     
     cls
     if /i "%Aux%" equ "1" ( 
-        call %1\do.bat %1
+        call %1\do.bat
         call :ScriptErrorHandler %ERRORLEVEL% %2\do.bat
     ) else if /i "%Aux%" equ "2" ( 
-        call %1\undo.bat %1
+        call %1\undo.bat 
         call :ScriptErrorHandler %ERRORLEVEL% %2\undo.bat
     ) else if /i "%Aux%" equ "0" (
         goto ModuleMenu
@@ -260,7 +310,7 @@ if %ERRORLEVEL% neq 0 (
         call :inputMissmatch %Aux%
         goto endScript
     )
-
+    
     goto endScript
 
 :WithoutUndo
@@ -271,14 +321,14 @@ if %ERRORLEVEL% neq 0 (
         set /p input=%WHITE%:
         cls
         if /i "%input%" equ "1" ( 
-            call %1\do.bat %1
+            call %1\do.bat
         ) else if /i "%input%" equ "0" ( 
-            goto ModuleMenu %1
+            goto ModuleMenu
         ) else (
             call :inputMissmatch %input%
             goto endScript
         )
-
+    
     goto endScript
 
 
@@ -326,6 +376,45 @@ if %ERRORLEVEL% neq 0 (
 ::-------------------------------END-MAIN-MENU---------------------------------::
 ::-----------------------------------------------------------------------------::
 
+::-------------------------------SETUP---------------------------------::
+:: - Acessible only without admin (because running in admin, the       ::
+::      actual dir change to System32, loosing track of the real dir)  ::
+:: - Create, update and deleate the auxiliar files in Appdata          ::
+::---------------------------------------------------------------------::
+
+:InitialSetup
+    cls
+    call :SetupAscii
+    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    echo %BLUE%║%WHITE% Error accessing the auxiliar files in AppData. Do you want to create a new folder?		   	%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %RED%Exit												%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %GREEN%Create folder											%BLUE%║
+    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+    set /p input=%WHITE%: 
+    if /i "%input%" equ "1" goto creating
+    if /i "%input%" equ "0" goto end
+    call :inputMissmatch %input%
+    goto AdminChoice
+
+:ModifySetup
+    cls
+    call :SetupAscii
+    echo %BLUE%╔═══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    echo %BLUE%║%WHITE% What do you want to do?										%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%0%YELLOW%] - %WHITE%Exit												%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%1%YELLOW%] - %WHITE%Update folder											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%2%YELLOW%] - %WHITE%Remove folder											%BLUE%║
+    echo %BLUE%║%WHITE% %YELLOW%[%WHITE%3%YELLOW%] - %WHITE%Run program											%BLUE%║
+
+    echo %BLUE%╚═══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+    set /p input=%WHITE%: 
+    if /i "%input%" equ "1" goto removingAndCreating
+    if /i "%input%" equ "2" goto removing
+    if /i "%input%" equ "3" goto OpenAdmin
+    if /i "%input%" equ "0" goto end
+    goto end
+
+
 :creating
     cls
     setlocal enabledelayedexpansion
@@ -345,9 +434,7 @@ if %ERRORLEVEL% neq 0 (
     copy ".\asciiArts" "%AsciiDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "Copy of ascii arts made" "copy of the ascii arts"
-    copy ".\WS_Runner.bat" "%StartDir%" >nul 2>&1
-    set /A bugs+=!ERRORLEVEL!
-    call :CommandMensage !ERRORLEVEL! "Copy of winsdows script runner made" "copy of winsdows script runner"
+    call :CommandMensage !ERRORLEVEL! "'%MenusFile%' created" "creation of '%MenusFile%'"
     dir /b "%ScriptsDir%" > "%ModulesFile%"
     @REM dir /B | find /V ".txt" "%ScriptsDir%" > "%ModulesFile%"        Comando para remover .txt dos diretorios listados, mas não funcion
     set /A bugs+=!ERRORLEVEL!
@@ -365,7 +452,33 @@ if %ERRORLEVEL% neq 0 (
         echo %RED% !bugs! errors during creation of the folder
     )
     endlocal
-    goto OpenAdmin
+    pause>nul|set/p =%WHITE%Press any key to continue...
+    goto ModifySetup
+
+
+:removing
+    cls
+    rmdir /s /q "%StartDir%" >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        echo %GREEN% Folder deleted with success
+    ) else if %ERRORLEVEL% EQU 2 (
+        echo %GREEN% Folder deleted with success
+    ) else if %ERRORLEVEL% EQU 5 (
+        echo %RED% The %ERRORLEVEL% error occurred during the deletion, trying to delete with admin rights...
+        echo rmdir /s /q @echo off"%StartDir%" > "%cd%/tmp.bat"
+        powershell "Start-Process %cd%\tmp.bat -Verb RunAs"
+        del %cd%\tmp.bat
+        pause>nul|set/p =%WHITE%Press any key to continue...
+    ) else (
+        echo %RED% The %ERRORLEVEL% error occurred during the deletion
+        pause>nul|set/p =%WHITE%Press any key to continue...
+    )
+    pause>nul|set/p =%WHITE%Press any key to continue...
+    goto InitialSetup
+    
+:uninstall
+    rmdir /s /q "%StartDir%" >nul 2>&1
+    goto end
 
 :removingAndCreating
     rmdir /s /q "%StartDir%" >nul 2>&1
@@ -393,6 +506,8 @@ if %ERRORLEVEL% neq 0 (
         echo %RED%An error occurred during the %~3
     )
     exit /b 0
+:run
+	pause
 
 ::---------------------------------------------------------------------::
 ::------------------------------END-SETUP------------------------------::
@@ -525,7 +640,7 @@ exit /b 0
 :: Common variables
 :SetVariables
 set "AuxArqSufix=.txt"
-set "StartDir=%temp%\WinsdowScript_runner"
+set "StartDir=c:\WinscriptRunner"
 set "ScriptsDir=%StartDir%\scripts"
 set "AsciiDir=%StartDir%\asciiArts"
 set "ModulesFile=%StartDir%\modules%AuxArqSufix%"

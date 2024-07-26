@@ -1,0 +1,2 @@
+This script adds a register to Always show the old context menu from Windows 10
+Effective only after restart

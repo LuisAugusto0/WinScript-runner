@@ -1,0 +1,1 @@
+Hide duplicate removable drives from navigation pane of File Explorer

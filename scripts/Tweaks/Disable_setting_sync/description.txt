@@ -1,0 +1,6 @@
+The batch code disables setting synchronization by modifying various registry values under different 
+groups. These changes prevent synchronization with microsoft account of specific settings related 
+to accessibility, app synchronization, browser settings, credentials, desktop themes, language, 
+package state, personalization, start layout, and Windows settings.
+
+Taken from EXM free utility tool "Discord.gg/exm"

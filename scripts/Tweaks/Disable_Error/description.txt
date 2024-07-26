@@ -1,0 +1,5 @@
+The batch code disables Windows Error Reporting (WER) by modifying registry values. 
+This action prevents applications from prompting users to send error reports to Microsoft and affects 
+WER behavior, including report generation and logging.
+
+Taken from EXM free utility tool "Discord.gg/exm"

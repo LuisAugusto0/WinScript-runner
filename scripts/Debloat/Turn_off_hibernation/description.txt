@@ -1,1 +1,0 @@
-A script that turns off hybernation

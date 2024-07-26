@@ -1,2 +1,0 @@
-echo test undo
-pause

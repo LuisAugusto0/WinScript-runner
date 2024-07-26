@@ -1,0 +1,7 @@
+This batch code will effectively disable GameDVR features, including recording gameplay clips, 
+capturing screenshots, and recording audio during gaming sessions. It also prevents historical 
+capture and cursor capture.
+
+
+
+Taken from EXM free utility tool "Discord.gg/exm"

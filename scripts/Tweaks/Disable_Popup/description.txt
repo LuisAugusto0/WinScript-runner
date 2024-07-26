@@ -1,0 +1,3 @@
+This batch code will disable various pop-up notifications, balloon tips, and features related to 
+notifications and advertising.
+Taken from EXM free utility tool "Discord.gg/exm"

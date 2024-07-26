@@ -1,0 +1,5 @@
+Batch code that modifies various Windows registry values to impact personalized experiences, 
+diagnostic tracking notifications, input features, user activity uploads, language preferences, 
+attachment saving, diagnostic tracing, and specific execution scenarios.
+
+Taken from EXM free utility tool "Discord.gg/exm"

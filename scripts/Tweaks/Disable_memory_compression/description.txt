@@ -1,0 +1,2 @@
+For less than 16 gb ram is better to Enable this.
+Taken from EXM free utility tool "Discord.gg/exm"

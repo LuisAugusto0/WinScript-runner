@@ -1,0 +1,1 @@
+Disable windows error report

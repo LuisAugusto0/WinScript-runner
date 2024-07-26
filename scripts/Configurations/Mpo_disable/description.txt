@@ -1,0 +1,2 @@
+If experience desktop apps flicker or stutter when resizing the window, disable the MPO (old error from Driver 461.09 or newer).
+Taken from nvidea site "https://nvidia.custhelp.com/app/answers/detail/a_id/5157/~/after-updating-to-nvidia-game-ready-driver-461.09-or-newer%2C-some-desktop-apps"

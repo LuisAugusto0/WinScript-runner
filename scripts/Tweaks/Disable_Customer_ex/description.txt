@@ -1,0 +1,4 @@
+This batch code will effectively disable various background tasks related to CEIP, application 
+compatibility assessment, and family safety monitoring.
+
+Taken from EXM free utility tool "Discord.gg/exm"

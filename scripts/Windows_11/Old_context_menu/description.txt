@@ -1,1 +1,0 @@
-This script adds a register to Always show the old contexto menu from Windows 10
