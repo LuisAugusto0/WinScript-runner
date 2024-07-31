@@ -143,7 +143,7 @@ if %ERRORLEVEL% neq 0 (
     set /p input=%WHITE%: 
     if /i "%input%" equ "%Exit%" (
         goto MainMenu
-    ) else if /i "%input%" LEQ "%j%" (
+    ) else if /i %input% LEQ %j% (
         call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%input%]! !script[%input%]! 
         goto ModuleMenu
     ) else if /i "%input%" equ "a" (
@@ -171,25 +171,25 @@ if %ERRORLEVEL% neq 0 (
     if /i "%input%" equ "0" (
         goto ModuleMenu
     ) else if /i "%input%" equ "1" (
-        for /L %%a in (0,1,!j!) do ( 
+        for /L %%a in (1,1,!j!) do ( 
             if exist %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat ( 
                 call %ScriptsDir%\%ActualModule%\!script[%%a]!\do.bat %1
-                call :ScriptErrorHandler %ERRORLEVEL% %2         
+                call :ScriptErrorHandler %ERRORLEVEL% !script[%%a]!         
             ) else (
                 echo Script !script[%%a]! doesn't have a do.bat file
             )
         )
     ) else if /i "%input%" equ "2" (
-        for /L %%a in (0,1,!j!) do ( 
+        for /L %%a in (1,1,!j!) do ( 
             if exist %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat ( 
                 call %ScriptsDir%\%ActualModule%\!script[%%a]!\undo.bat #1
-                call :ScriptErrorHandler %ERRORLEVEL% %2         
+                call :ScriptErrorHandler %ERRORLEVEL% !script[%%a]!         
             ) else (
                 echo Script !script[%%a]! doesn't have a undo.bat file
             )
         )
     ) else if /i "%input%" equ "3" (
-        for /L %%a in (0,1,!j!) do ( 
+        for /L %%a in (1,1,!j!) do ( 
             call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%input%]! !script[%input%]!        
         )
     ) 
@@ -258,7 +258,7 @@ if %ERRORLEVEL% neq 0 (
         goto ModuleMenu
     ) else (
         call :inputMissmatch %Aux%
-        goto endScript
+        exit /b 0
     )
 
     goto endScript
@@ -276,7 +276,7 @@ if %ERRORLEVEL% neq 0 (
             goto ModuleMenu %1
         ) else (
             call :inputMissmatch %input%
-            goto endScript
+            exit /b 0
         )
 
     goto endScript
