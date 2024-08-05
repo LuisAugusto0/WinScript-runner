@@ -1,0 +1,9 @@
+# Configuração geral
+Include: BASE_CONFIG.txt
+# Configurações específicas
+# KZ ZSN PRO X
+Device: Alto-falantes Realtek(R) Audio {7e685675-ce52-4112-be30-dc6346ef4ae8}
+Include: KZ_FLAT.txt
+# HUSKY GAMING SNOW
+Device: Alto-falantes USB Audio Device {84f35955-fcb7-4d3c-8b2c-cd8de1223c7e}
+Include: HUSKY_EQ.txt

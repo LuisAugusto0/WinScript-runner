@@ -9,6 +9,7 @@ call :SetColors
 ::      menu will show to the user                                               ::
 ::-------------------------------------------------------------------------------::
 :Verifications
+powershell -ExecutionPolicy Bypass exit
 SETLOCAL EnableDelayedExpansion
 :: Check Administrator Privileges
 net session >nul 2>&1
@@ -97,7 +98,6 @@ if %ERRORLEVEL% neq 0 (
     Reg.exe delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "RPSessionInterval" /f  >nul 2>&1
     Reg.exe delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "DisableConfig" /f >nul 2>&1
     Reg.exe add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
-    %b%
     powershell -Command "Checkpoint-Computer -Description 'Windows Script Runner Restore Point' -RestorePointType 'MODIFY_SETTINGS'" 
     chcp 65001 >nul 2>&1
     goto MainMenu
@@ -533,7 +533,7 @@ set "MenusFile=%StartDir%\menus%AuxArqSufix%"
 set "PathFile=%StartDir%\initialPath%AuxArqSufix%"
 set "ScriptsNamesSufix=_names%AuxArqSufix%"
 set "RunSufix=.bat"
-set "Version=1.01"
+set "Version=1.1.2"
 set /a input=0
 set /a Exit=0
 

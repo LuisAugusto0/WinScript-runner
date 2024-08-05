@@ -1,5 +1,5 @@
 # Define the application ID you want to check and install
-$appId = "Google.Chrome"
+$appId = "Git.Git"
 
 # Get the list of installed applications
 $listApp = winget list --exact --query "$appId"

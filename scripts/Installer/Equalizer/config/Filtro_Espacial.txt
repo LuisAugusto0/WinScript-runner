@@ -1,0 +1,4 @@
+Include: HeSuVi\hesuvi.txt
+# Include: HeSuVi\hesuvi.txt
+# Include: HeSuVi\hesuvi.txt
+# GraphicEQ: 99.265 -1.2; 400.9 -7.5; 547.1 -6.5; 739.8 -4.7; 982.2 -6.8; 1509.6 -8.6; 1897.3 -13.9; 2496.1 -12.2; 4564.1 -6.8; 5736.3 -5.8; 8499.5 -4
