@@ -190,7 +190,7 @@ if %ERRORLEVEL% neq 0 (
         )
     ) else if /i "%input%" equ "3" (
         for /L %%a in (1,1,!j!) do ( 
-            call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%input%]! !script[%input%]!        
+            call :ScriptMenu %ScriptsDir%\%ActualModule%\!script[%%a]! !script[%%a]!        
         )
     ) 
 
@@ -220,6 +220,7 @@ if %ERRORLEVEL% neq 0 (
         goto ScriptMenuAux
     ) else (
         echo %RED%Broken%WHITE%, do.bat does not exist.
+	pause>nul|set/p =%WHITE%Press any key to go back...
         exit /b 0
     )
     
@@ -233,11 +234,9 @@ if %ERRORLEVEL% neq 0 (
     ) else (
         goto WithoutUndo
     )
- 
-    
 
     pause>nul|set/p =%WHITE%Press any key to go back...
-    goto endTest
+    goto endScript
 
 :WithUndo
     echo %YELLOW% [%WHITE%0%YELLOW%]%WHITE% Go back to modules
@@ -255,7 +254,7 @@ if %ERRORLEVEL% neq 0 (
         call %1\undo.bat %1
         call :ScriptErrorHandler %ERRORLEVEL% %2\undo.bat
     ) else if /i "%Aux%" equ "0" (
-        goto ModuleMenu
+        exit /b 0
     ) else (
         call :inputMissmatch %Aux%
         exit /b 0
@@ -273,7 +272,7 @@ if %ERRORLEVEL% neq 0 (
         if /i "%input%" equ "1" ( 
             call %1\do.bat %1
         ) else if /i "%input%" equ "0" ( 
-            goto ModuleMenu %1
+            exit /b 0
         ) else (
             call :inputMissmatch %input%
             exit /b 0
@@ -339,7 +338,7 @@ if %ERRORLEVEL% neq 0 (
     mkdir "%AsciiDir%" >nul 2>&1
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "'%AsciiDir%' created" "creation of '%AsciiDir%'"
-    xcopy /s ".\scripts" "%ScriptsDir%" >nul 2>&1
+    xcopy /z /s ".\scripts" "%ScriptsDir%"
     set /A bugs+=!ERRORLEVEL!
     call :CommandMensage !ERRORLEVEL! "Copy of scripts made" "copy of the scripts"
     copy ".\asciiArts" "%AsciiDir%" >nul 2>&1

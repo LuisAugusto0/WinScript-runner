@@ -1,1 +1,1 @@
-Disable Bing search
+Align taskbar on the left

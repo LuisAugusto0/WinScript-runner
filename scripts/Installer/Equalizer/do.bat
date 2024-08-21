@@ -6,9 +6,11 @@ mkdir "%ProgramFiles%\EqualizerAPO\config"
 xcopy /s "%1\config" "%ProgramFiles%\EqualizerAPO\config"
 
 :: Define the target application path
-set "targetPath=C:\Program Files\EqualizerAPO\config\HeSuVi\HeSuVi.exe"
+set targetPath="C:\Program Files\EqualizerAPO\config\HeSuVi\HeSuVi.exe"
 :: Define the shortcut location
-set "shortcutPath=C:\ProgramData\Microsoft\Windows\Start Menu\Programs\HeSuVi.lnk"
+set shortcutPath="%appdata%\Microsoft\Windows\Start Menu\Programs\Equalizer APO 1.3.2\HeSuVi.lnk"
 :: Create the shortcut
-powershell -command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%shortcutPath%'); $s.TargetPath='%targetPath%'; $s.Save()"
+@REM powershell -command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%shortcutPath%'); $s.TargetPath='%targetPath%'; $s.Save()"
+:: Modify the shortcut to run as administrator
+powershell -command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%shortcutPath%'); $s.TargetPath='%targetPath%'; $s.IconLocation='%targetPath%'; $s.Description='HeSuVi'; $s.WorkingDirectory='%~dp0'; $s.Arguments=''; $s.WindowStyle=1; $s.; $s.Save(); "
 echo Shortcut created successfully.
