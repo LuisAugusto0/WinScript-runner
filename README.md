@@ -9,7 +9,7 @@ This overview will cover the program's functionalities and how scripts and relat
 
 
 ## Features and Implementations:
-* <b>Setup Menu</b> (not avaible in the auto-setup*):<br>
+* <b>Setup Menu</b>:<br>
 WinScript Runner includes a setup menu that do essential tasks such as copying and configuring auxiliary .txt files, deleting archives, and updating the auxiliar folder (located in "c:\WinscriptRunner"). 
 These operations are crucial since the menu can adaptate with the addition or deletion of modules and scripts because of the setup. 
 
@@ -22,8 +22,6 @@ Within the modules menu, users can select specific modules that contain scripts 
 * <b>Script Menu</b>:<br>
 The script menu provides detailed information about individual scripts within selected modules. It includes options to execute the script, undo changes made by the script (if an undo script is provided),
 and view a description of the script (if a description file is available).
-
-###### *Auto-Setup Option: to enhance user experience and streamline operations, WinScript Runner features an auto-setup option. This functionality automates certain setup tasks and configurations, reducing the need for manual intervention and enhancing efficiency.
 
 ## File distribuition explanation:
 The files associated with WinScript Runner are organized within specific directories under the main program directory, providing the structure to all this program. Here's a breakdown of the file distribution:
